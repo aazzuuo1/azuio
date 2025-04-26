@@ -90,105 +90,30 @@
       <p class="small-text" style="margin-top:1rem">لديك حساب؟ <span id="goLogin" class="link">سجّل دخول</span></p>
     </div>
   </div>
+<script>
+const scriptURL = 'https://script.google.com/macros/s/AKfycbzlTXObl1qq2MGTGM_aJI4yR1S44vMVmh2wf9niYxBVN2t-R7fxuuCnGvvbktFo86zOQQ/exec';
 
-  <script>
-    /* ========== عناصر DOM ========= */
-    const loginTab     = document.getElementById('loginTab');
-    const registerTab  = document.getElementById('registerTab');
-    const loginCard    = document.getElementById('loginCard');
-    const registerCard = document.getElementById('registerCard');
+function login() {
+  const email = document.getElementById('email').value;
 
-    const loginForm = document.getElementById('loginForm');
-    const registerForm = document.getElementById('registerForm');
-    const loginWarning = document.getElementById('loginWarning');
-
-    /* ========== تبديل التبويبات ========= */
-    loginTab.onclick = () => switchScreen(true);
-    registerTab.onclick = () => switchScreen(false);
-    document.getElementById('goRegister').onclick = () => switchScreen(false);
-    document.getElementById('goLogin').onclick   = () => switchScreen(true);
-
-    function switchScreen(isLogin){
-      loginTab.classList.toggle('active',isLogin);
-      registerTab.classList.toggle('active',!isLogin);
-      loginCard.classList.toggle('hidden',!isLogin);
-      registerCard.classList.toggle('hidden',isLogin);
-    }
-
-    /* ========== تخزين المستخدم محلياً ========= */
-    function saveUser(email,password){
-      localStorage.setItem('userEmail',email);
-      localStorage.setItem('userPass',password);
-    }
-    function userExists(){
-      return localStorage.getItem('userEmail');
-    }
-/* ========== معالجة التسجيل ========= */
-registerForm.addEventListener('submit', e => {
-  e.preventDefault();
-  const email = regEmail.value.trim();
-  const pass1 = regPass.value;
-  const pass2 = regPass2.value;
-
-  if (pass1 !== pass2) {
-    alert('كلمتا المرور غير متطابقتين');
+  if (!email) {
+    alert('الرجاء كتابة بريد إلكتروني صحيح');
     return;
   }
 
-  // توليد كود إحالة فريد (مثلاً: user293)
-  const referralCode = "user" + Math.floor(Math.random() * 10000);
+  const referralCode = Math.random().toString(36).substring(2, 8);
 
-  // حفظ بيانات المستخدم
-  saveUser(email, pass1);
+  localStorage.setItem('email', email);
   localStorage.setItem('referralCode', referralCode);
-// قراءة كود الإحالة من الرابط (إن وجد)
-const urlParams = new URLSearchParams(window.location.search);
-const ref = urlParams.get('ref') || '';
 
-// إرسال البيانات إلى Google Sheets
-fetch("https://script.google.com/macros/s/AKfycbx-OxGSvXjcd35seQ8Sz6zb_yEKXLPbujOgCi7CeZYR9IaQ56mqSqe9beVTWPj--D1PLg/exec", {
-  method: "POST",
-  body: JSON.stringify({
-    email: email,
-    referralCode: referralCode,
-    referredBy: ref
-  }),
-  headers: {
-    "Content-Type": "application/json"
-  }
-})
-.then(res => res.text())
-.then(res => {
-  console.log("تم حفظ البيانات في Google Sheets:", res);
-})
-.catch(err => {
-  console.error("حدث خطأ أثناء الحفظ في Google Sheets:", err);
-});
-
-  alert('تم التسجيل بنجاح! يمكنك تسجيل الدخول الآن.');
-  switchScreen(true);
-});
-
-    /* ========== معالجة تسجيل الدخول ========= */
-    loginForm.addEventListener('submit',e=>{
-      e.preventDefault();
-      loginWarning.classList.add('hidden');   // إخفاء التحذير كل محاولة
-
-      if(!userExists()){
-        loginWarning.classList.remove('hidden'); // إظهار التحذير بالأحمر
-        switchScreen(false);
-        return;
-      }
-
-      const email = loginEmail.value.trim();
-      const pass  = loginPass.value;
-      if(email===localStorage.getItem('userEmail') && pass===localStorage.getItem('userPass')){
-        // location.href = 'dashboard.html';
-      }else{
-        alert('بيانات غير صحيحة');
-      }
-      window.location.href = "home.html";
-    });
-  </script>
+  fetch(`${scriptURL}?action=addUser&email=${email}&referralCode=${referralCode}`)
+    .then(response => response.text())
+    .then(data => {
+      console.log('تم تسجيل المستخدم:', data);
+      window.location.href = 'home.html';
+    })
+    .catch(error => console.error('خطأ في التسجيل:', error));
+}
+</script>
 </body>
 </html>
