@@ -11,40 +11,37 @@
 
 <h2>عدد الأشخاص الذين سجلوا من رابطك:</h2>
 <p id="referralCount">جاري التحميل...</p>
-
 <script>
-// رابط السكربت الخاص بك
-const scriptURL = 'https://script.google.com/macros/s/AKfycbzlTXObl1qq2MGTGM_aJI4yR1S44vMVmh2wf9niYxBVN2t-R7fxuuCnGvvbktFo86zOQQ/exec';
+// رابط السكربت
+const scriptURL = 'https://script.google.com/macros/s/AKfycbwT3zft0lAMQHeOZrvWyuOwZChrERjtKwrVDXOsov0M5aCWi36C0ng0IyMlWIkF524i/exec';
 
-// قراءة البريد وكود الإحالة من التخزين المحلي
 const email = localStorage.getItem('email');
-const referralCode = localStorage.getItem('referralCode');
-
-// لو ما لقى بيانات، يرجعه لصفحة التسجيل
-if (!email || !referralCode) {
-  alert('الرجاء تسجيل الدخول أولا');
+if (!email) {
+  alert('الرجاء تسجيل الدخول أولاً');
   window.location.href = 'index.html';
 }
 
-// إنشاء رابط الإحالة
-const referralLink = window.location.origin + '/index.html?ref=' + referralCode;
-document.getElementById('referralLink').textContent = referralLink;
-
-// جلب عدد الإحالات من Google Sheets
-fetch(`${scriptURL}?action=getReferrals&referralCode=${referralCode}`)
-  .then(response => response.json())
+fetch(`${scriptURL}?action=getUser&email=${email}`)
+  .then(r => r.json())
   .then(data => {
-    if (data && data.count !== undefined) {
-      document.getElementById('referralCount').textContent = data.count + ' إحالة';
-    } else {
-      document.getElementById('referralCount').textContent = '0 إحالات';
+    if (data.status === 'not_found') {
+      document.getElementById('referralLink').textContent = 'المستخدم غير موجود';
+      document.getElementById('referralCount').textContent = '';
+      return;
     }
+    // عرض الرابط
+    const link = `${window.location.origin}/index.html?ref=${data.referralCode}`;
+    document.getElementById('referralLink').innerHTML =
+      `<a href="${link}">${link}</a>`;
+
+    // عرض عدد الإحالات
+    document.getElementById('referralCount').textContent =
+      data.referredCount + ' إحالة';
   })
-  .catch(error => {
-    console.error('خطأ في جلب البيانات:', error);
+  .catch(err => {
+    console.error(err);
     document.getElementById('referralCount').textContent = 'خطأ في التحميل';
   });
 </script>
-
 </body>
 </html>
