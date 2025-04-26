@@ -91,28 +91,38 @@
     </div>
   </div>
 <script>
-const scriptURL = 'https://script.google.com/macros/s/AKfycbzHb1JUCSHTQwoQ3NrTVuoPa_fUoyhSOUdk63qWj8D5w4YGiLzze433mwxoCM-_372ovA/exec';
+const scriptURL = 'https://script.google.com/macros/s/AKfycbwT3zft0lAMQHeOZrvWyuOwZChrERjtKwrVDXOsov0M5aCWi36C0ng0IyMlWIkF524i/exec';
 
 function login() {
   const email = document.getElementById('email').value;
+  if (!email) { alert('الرجاء كتابة بريد إلكتروني'); return; }
 
-  if (!email) {
-    alert('الرجاء كتابة بريد إلكتروني صحيح');
-    return;
-  }
+  // التحقق من كود الإحالة في الرابط (؟ref=...)
+  const urlParams = new URLSearchParams(window.location.search);
+  const referredBy = urlParams.get('ref');
 
+  // خلق كود إحالة جديد للمستخدم
   const referralCode = Math.random().toString(36).substring(2, 8);
 
+  // حفظ محلي
   localStorage.setItem('email', email);
   localStorage.setItem('referralCode', referralCode);
 
+  // 1) أولاً: نسجل المستخدم الجديد
   fetch(`${scriptURL}?action=addUser&email=${email}&referralCode=${referralCode}`)
-    .then(response => response.text())
-    .then(data => {
-      console.log('تم تسجيل المستخدم:', data);
+    .then(r => r.json())
+    .then(resp => {
+      if (resp.status === 'ok' && referredBy) {
+        // 2) لو كان هناك referredBy، نزود عداد الإحالات
+        return fetch(`${scriptURL}?action=updateReferral&referralCode=${referredBy}`)
+                 .then(r2 => r2.json());
+      }
+    })
+    .finally(() => {
+      // 3) نذهب للصفحة الرئيسية
       window.location.href = 'home.html';
     })
-    .catch(error => console.error('خطأ في التسجيل:', error));
+    .catch(err => console.error(err));
 }
 </script>
 </body>
