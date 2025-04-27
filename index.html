@@ -79,12 +79,12 @@
       const password = document.getElementById('loginPass').value;
       if (!email || !password) { alert('الرجاء ملء جميع الحقول'); return; }
 
-      // أرسل بيانات تسجيل الدخول
-      fetch(`${scriptURL}?action=login&email=${email}&password=${password}`)
+      // تحقق من إذا كان المستخدم موجودًا في جوجل شيت
+      fetch(`${scriptURL}?action=checkUser&email=${email}&password=${password}`)
         .then(r => r.json())
         .then(resp => {
           if (resp.status === 'ok') {
-            // إذا كانت البيانات صحيحة
+            // إذا كانت بيانات الحساب صحيحة، قم بتوجيه المستخدم إلى الصفحة الرئيسية
             window.location.href = 'home.html';
           } else {
             document.getElementById('loginWarning').classList.remove('hidden');
@@ -100,15 +100,25 @@
       if (!email || !password || !password2) { alert('الرجاء ملء جميع الحقول'); return; }
       if (password !== password2) { alert('كلمة المرور غير متطابقة'); return; }
 
-      // إنشاء كود إحالة عشوائي
-      const referralCode = Math.random().toString(36).substring(2, 8);
-
-      // حفظ البيانات في جوجل شيت
-      fetch(`${scriptURL}?action=addUser&email=${email}&password=${password}&referralCode=${referralCode}`)
+      // تحقق من أن المستخدم لم يسجل من قبل
+      fetch(`${scriptURL}?action=checkUserExists&email=${email}`)
         .then(r => r.json())
         .then(resp => {
-          if (resp.status === 'ok') {
-            window.location.href = 'home.html';
+          if (resp.status === 'exists') {
+            alert('هذا البريد الإلكتروني مسجل بالفعل!');
+          } else {
+            // إنشاء كود إحالة عشوائي
+            const referralCode = Math.random().toString(36).substring(2, 8);
+
+            // تسجيل المستخدم الجديد
+            fetch(`${scriptURL}?action=addUser&email=${email}&password=${password}&referralCode=${referralCode}`)
+              .then(r => r.json())
+              .then(resp => {
+                if (resp.status === 'ok') {
+                  window.location.href = 'home.html';
+                }
+              })
+              .catch(err => console.error(err));
           }
         })
         .catch(err => console.error(err));
